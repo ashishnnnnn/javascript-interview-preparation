@@ -81,4 +81,101 @@ So the main demarit of callback is the pyramid of doom .
 
 ---
 
-##
+## Promise
+
+- The constructor syntax for a promise object is:
+
+```js
+let promise = new Promise(function (resolve, reject) {
+  // executor (the producing code, "singer")
+});
+```
+
+- When the executor obtains the result, be it soon or late, doesn’t matter, it should call one of these callbacks
+
+  - (1). resolve(value) — if the job is finished successfully, with result value.
+
+  - (2). reject(error) — if an error has occurred, error is the error object.
+
+- The promise object returned by the new Promise constructor has these internal properties
+
+  - (1). state — initially "pending", then changes to either "fulfilled" when resolve is called or "rejected" when reject is called
+
+  - (2). result — initially undefined, then changes to value when resolve(value) called or error when reject(error) is called
+
+- To summarize, the executor should perform a job (usually something that takes time) and then call resolve or reject to change the state of the corresponding promise object.
+
+- **There can be only a single result or an error**
+
+  - The executor should call only one resolve or one reject. Any state change is final.All further calls of resolve and reject are ignored:
+
+  ```js
+  let promise = new Promise(function (resolve, reject) {
+    resolve("done");
+
+    reject(new Error("…")); // ignored
+    setTimeout(() => resolve("…")); // ignored
+  });
+  ```
+
+- then
+
+  - The most important, fundamental one is .then.
+
+  ```js
+  promise.then(
+    function (result) {
+      /* handle a successful result */
+    },
+    function (error) {
+      /* handle an error */
+    }
+  );
+  ```
+
+  - The first argument of .then is a function that runs when the promise is resolved, and receives the result.
+
+  - The second argument of .then is a function that runs when the promise is rejected, and receives the error.
+
+- catch
+
+  - If we’re interested only in errors, then we can use null as the first argument: .then(null, errorHandlingFunction). Or we can use .catch(errorHandlingFunction), which is exactly the same:
+
+- finally
+
+  - A finally handler has no arguments. In finally we don’t know whether the promise is successful or not. That’s all right, as our task is usually to perform “general” finalizing procedures.
+
+  - A finally handler passes through results and errors to the next handler.
+
+        ```js
+        new Promise((resolve, reject) => {
+
+        setTimeout(() => resolve("result"), 2000)
+        })
+        .finally(() => alert("Promise ready"))
+        .then(result => alert(result)); // <-- .then handles the result
+
+    ````
+
+        ```js
+          new Promise((resolve, reject) => {
+              throw new Error("error");
+            })
+            .finally(() => alert("Promise ready"))
+            .catch(err => alert(err));  // <-- .catch handles the error object
+    ````
+
+- question
+
+  - question 1
+
+  ```js
+  let promise = new Promise(function (resolve, reject) {
+    resolve(1);
+
+    setTimeout(() => resolve(2), 1000);
+  });
+  promise.then(alert);
+  ```
+
+  Answer - The Output is 1. Beacuse once the exexutator function has resolved . The below call will not be called .
