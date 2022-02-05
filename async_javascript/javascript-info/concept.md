@@ -155,7 +155,7 @@ let promise = new Promise(function (resolve, reject) {
         .finally(() => alert("Promise ready"))
         .then(result => alert(result)); // <-- .then handles the result
 
-    ````
+      ```
 
         ```js
           new Promise((resolve, reject) => {
@@ -163,7 +163,7 @@ let promise = new Promise(function (resolve, reject) {
             })
             .finally(() => alert("Promise ready"))
             .catch(err => alert(err));  // <-- .catch handles the error object
-    ````
+    ```
 
 - question
 
