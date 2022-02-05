@@ -141,44 +141,66 @@ let promise = new Promise(function (resolve, reject) {
 
   - If we’re interested only in errors, then we can use null as the first argument: .then(null, errorHandlingFunction). Or we can use .catch(errorHandlingFunction), which is exactly the same:
 
+  **Note**
+
+  - .catch also return a promise .
+
+  ```js
+  function fakeFetch(msg, shouldReject) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (shouldReject) {
+          reject(`error from server: ${msg}`);
+        }
+        resolve(`from server: ${msg}`);
+      }, 3000);
+    });
+  }
+  fakeFetch("hello", true)
+    .catch(() => console.log("hello"))
+    .then(() => console.log("i am the end"));
+  ```
+
+  - Here output is "hello, i am the end "
+
 - finally
 
-  - A finally handler has no arguments. In finally we don’t know whether the promise is successful or not. That’s all right, as our task is usually to perform “general” finalizing procedures.
+- A finally handler has no arguments. In finally we don’t know whether the promise is successful or not. That’s all right, as our task is usually to perform “general” finalizing procedures.
 
-  - A finally handler passes through results and errors to the next handler.
-
-        ```js
-        new Promise((resolve, reject) => {
-
-        setTimeout(() => resolve("result"), 2000)
-        })
-        .finally(() => alert("Promise ready"))
-        .then(result => alert(result)); // <-- .then handles the result
-
-    ````
+- A finally handler passes through results and errors to the next handler.
 
       ```js
-        new Promise((resolve, reject) => {
-            throw new Error("error");
-          })
-          .finally(() => alert("Promise ready"))
-          .catch(err => alert(err));  // <-- .catch handles the error object
-    ````
+      new Promise((resolve, reject) => {
+
+      setTimeout(() => resolve("result"), 2000)
+      })
+      .finally(() => alert("Promise ready"))
+      .then(result => alert(result)); // <-- .then handles the result
+
+  ````
+
+    ```js
+      new Promise((resolve, reject) => {
+          throw new Error("error");
+        })
+        .finally(() => alert("Promise ready"))
+        .catch(err => alert(err));  // <-- .catch handles the error object
+  ````
 
 - question
 
-  - question 1
+- question 1
 
-  ```js
-  let promise = new Promise(function (resolve, reject) {
-    resolve(1);
+```js
+let promise = new Promise(function (resolve, reject) {
+  resolve(1);
 
-    setTimeout(() => resolve(2), 1000);
-  });
-  promise.then(alert);
-  ```
+  setTimeout(() => resolve(2), 1000);
+});
+promise.then(alert);
+```
 
-  Answer - The Output is 1. Beacuse once the exexutator function has resolved . The below call will not be called .
+Answer - The Output is 1. Beacuse once the exexutator function has resolved . The below call will not be called .
 
 ---
 
@@ -224,3 +246,79 @@ new Promise(function (resolve, reject) {
 
   - The answer is no because when when some error got occured in `f1` , then that error will got passed and will be handled by .catch `f2` function.
     But here in second one if some error happend in f1 then that error will not be handled by anyone other function
+
+---
+
+## Error Handling with promise .
+
+- Promise chains are great at error handling. When a promise rejects, the control jumps to the closest rejection handler. That’s very convenient in practice.
+
+- **Implict Try catch**
+
+  - The code of a promise executor and promise handlers has an "invisible try..catch" around it. If an exception happens, it gets caught and treated as a rejection.
+
+  ```js
+  new Promise((resolve, reject) => {
+    throw new Error("Whoops!");
+  }).catch(alert); // Error: Whoops!
+  ```
+
+  Above code works same as
+
+  ```js
+  new Promise((resolve, reject) => {
+    reject(new Error("Whoops!"));
+  }).catch(alert); // Error: Whoops!
+  ```
+
+- **Rethrowing**
+
+  - As we already noticed, .catch at the end of the chain is similar to try..catch. We may have as many .then handlers as we want, and then use a single .catch at the end to handle errors in all of them.
+
+  - If we throw inside .catch, then the control goes to the next closest error handler. And if we handle the error and finish normally, then it continues to the next closest successful .then handler.
+
+  ```js
+  // the execution: catch -> catch
+  new Promise((resolve, reject) => {
+    throw new Error("Whoops!");
+  })
+    .catch(function (error) {
+      // (*)
+
+      if (error instanceof URIError) {
+        // handle it
+      } else {
+        alert("Can't handle such error");
+
+        throw error; // throwing this or another error jumps to the next catch
+      }
+    })
+    .then(function () {
+      /* doesn't run here */
+    })
+    .catch((error) => {
+      // (**)
+
+      alert(`The unknown error has occurred: ${error}`);
+      // don't return anything => execution goes the normal way
+    });
+  ```
+
+  - The execution jumps from the first .catch (\*) to the next one (\*\*) down the chain.
+
+- **Question**
+
+  What do you think? Will the .catch trigger? Explain your answer.
+
+  ```js
+  new Promise(function (resolve, reject) {
+    setTimeout(() => {
+      throw new Error("Whoops!");
+    }, 1000);
+  }).catch(alert);
+  ```
+
+  So here error will be not handle , because try/error are synchrouns way of handling error in promise.
+  When the exucatator function of promise obejct runs at that points this error will not run and thus it won't work later .
+
+---
