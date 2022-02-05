@@ -155,15 +155,15 @@ let promise = new Promise(function (resolve, reject) {
         .finally(() => alert("Promise ready"))
         .then(result => alert(result)); // <-- .then handles the result
 
-      ```
+    ````
 
-        ```js
-          new Promise((resolve, reject) => {
-              throw new Error("error");
-            })
-            .finally(() => alert("Promise ready"))
-            .catch(err => alert(err));  // <-- .catch handles the error object
-    ```
+      ```js
+        new Promise((resolve, reject) => {
+            throw new Error("error");
+          })
+          .finally(() => alert("Promise ready"))
+          .catch(err => alert(err));  // <-- .catch handles the error object
+    ````
 
 - question
 
@@ -179,3 +179,48 @@ let promise = new Promise(function (resolve, reject) {
   ```
 
   Answer - The Output is 1. Beacuse once the exexutator function has resolved . The below call will not be called .
+
+---
+
+## Promise Chaining
+
+```js
+new Promise(function (resolve, reject) {
+  setTimeout(() => resolve(1), 1000); // (*)
+})
+  .then(function (result) {
+    // (**)
+
+    console.log(result); // 1
+    return result * 2;
+  })
+  .then(function (result) {
+    // (***)
+
+    console.log(result); // 2
+    return result * 2;
+  })
+  .then(function (result) {
+    console.log(result); // 4
+    return result * 2;
+  });
+```
+
+- .then returns a new promise, so that we can call the next .then on it.
+
+- When a handler returns a value, it becomes the result of that promise, so the next .then is called with it.
+
+- **A classic newbie error: technically we can also add many .then to a single promise. This is not chaining.**
+
+- **question**
+
+  - Are these code fragments equal? In other words, do they behave the same way in any circumstances, for any handler functions?
+
+  ```js
+  promise.then(f1).catch(f2);
+
+  promise.then(f1, f2);
+  ```
+
+  - The answer is no because when when some error got occured in `f1` , then that error will got passed and will be handled by .catch `f2` function.
+    But here in second one if some error happend in f1 then that error will not be handled by anyone other function
