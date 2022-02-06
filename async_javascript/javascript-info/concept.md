@@ -322,3 +322,131 @@ new Promise(function (resolve, reject) {
   When the exucatator function of promise obejct runs at that points this error will not run and thus it won't work later .
 
 ---
+
+## Promise API
+
+---
+
+- **Promise.all()**
+
+- Promise.all takes an array of promises (it technically can be any iterable, but is usually an array) and returns a new promise.
+
+- The new promise resolves when all listed promises are resolved, and the array of their results becomes its result.
+
+```js
+Promise.all([
+  new Promise((resolve) => setTimeout(() => resolve(1), 3000)), // 1
+  new Promise((resolve) => setTimeout(() => resolve(2), 2000)), // 2
+  new Promise((resolve) => setTimeout(() => resolve(3), 1000)), // 3
+]).then(alert); // 1,2,3 when promises are ready: each promise contributes an array member
+```
+
+- If any of the promises is rejected, the promise returned by Promise.all immediately rejects with that error.
+
+- If one promise rejects, Promise.all immediately rejects, completely forgetting about the other ones in the list. Their results are ignored.
+
+- For example, if there are multiple fetch calls, like in the example above, and one fails, the others will still continue to execute, but Promise.all won’t watch them anymore. They will probably settle, but their results will be ignored.
+
+- Normally, Promise.all(...) accepts an iterable (in most cases an array) of promises. But if any of those objects is not a promise, it’s passed to the resulting array “as is”.
+
+For instance, here the results are [1, 2, 3]:
+
+```js
+Promise.all([
+  new Promise((resolve, reject) => {
+    setTimeout(() => resolve(1), 1000);
+  }),
+  2,
+  3,
+]).then(alert); // 1, 2, 3
+```
+
+- **Promise.allSettled**
+
+- Promise.allSettled just waits for all promises to settle, regardless of the result. The resulting array has
+
+  - {status:"fulfilled", value:result} for successful responses
+
+  - {status:"rejected", reason:error} for errors
+
+```js
+let urls = [
+  "https://api.github.com/users/iliakan",
+  "https://api.github.com/users/remy",
+  "https://no-such-url",
+];
+
+Promise.allSettled(urls.map((url) => fetch(url))).then((results) => {
+  // (*)
+  results.forEach((result, num) => {
+    if (result.status == "fulfilled") {
+      alert(`${urls[num]}: ${result.value.status}`);
+    }
+    if (result.status == "rejected") {
+      alert(`${urls[num]}: ${result.reason}`);
+    }
+  });
+});
+```
+
+- **Promise.race**
+
+- Similar to Promise.all, but waits only for the first settled promise and gets its result (or error).
+
+- The syntax is:
+
+```js
+let promise = Promise.race(iterable);
+```
+
+- For instance, here the result will be 1
+
+```js
+Promise.race([
+  new Promise((resolve, reject) => setTimeout(() => resolve(1), 1000)),
+  new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error("Whoops!")), 2000)
+  ),
+  new Promise((resolve, reject) => setTimeout(() => resolve(3), 3000)),
+]).then(alert); // 1
+```
+
+- The first promise here was fastest, so it became the result. After the first settled promise “wins the race”, all further results/errors are ignored.
+
+- **Promise.any**
+
+- Similar to Promise.race, but waits only for the first fulfilled promise and gets its result. If all of the given promises are rejected, then the returned promise is rejected with AggregateError – a special error object that stores all promise errors in its errors property.
+
+- The syntax is:
+
+```js
+let promise = Promise.any(iterable);
+```
+
+- For instance, here the result will be 1:
+
+```js
+Promise.any([
+  new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error("Whoops!")), 1000)
+  ),
+  new Promise((resolve, reject) => setTimeout(() => resolve(1), 2000)),
+  new Promise((resolve, reject) => setTimeout(() => resolve(3), 3000)),
+]).then(alert); // 1
+```
+
+- **Promise.resolve()**
+
+- Promise.resolve(value) creates a resolved promise with the result value.
+
+```js
+let promise = new Promise((resolve) => resolve(value));
+```
+
+- **Promise.reject()**
+
+- Promise.reject(error) creates a rejected promise with error.
+
+```js
+let promise = new Promise((resolve, reject) => reject(error));
+```
